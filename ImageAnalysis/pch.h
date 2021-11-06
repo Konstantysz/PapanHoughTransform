@@ -9,5 +9,9 @@
 
 // add headers that you want to pre-compile here
 #include "framework.h"
+#include <iostream>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+
 
 #endif //PCH_H

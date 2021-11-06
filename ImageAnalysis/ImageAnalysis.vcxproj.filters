@@ -24,6 +24,12 @@
     <ClInclude Include="ImageAnalyzer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ImageAnalyzerSingleThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageAnalysisUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImageAnalysis.cpp">
@@ -33,6 +39,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ImageAnalyzer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageAnalyzerSingleThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageAnalysisUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

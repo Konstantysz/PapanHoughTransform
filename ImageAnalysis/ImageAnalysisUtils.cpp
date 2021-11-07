@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ImageAnalysisUtils.h"
+#include <cmath>
 
 namespace ImageAnalysis
 {

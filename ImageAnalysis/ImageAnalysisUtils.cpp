@@ -215,5 +215,35 @@ namespace ImageAnalysis
             return result;
         }
 
+        cv::Mat HysteresisThresholding(const cv::Mat& input)
+        {
+            cv::Mat zeroPadInput = cv::Mat::zeros(cv::Size(input.cols + 2, input.rows + 2), input.type());
+            input.copyTo(zeroPadInput(cv::Rect(1, 1, input.cols, input.rows)));
+
+            cv::Mat zeroPadOutput = cv::Mat::zeros(zeroPadInput.size(), zeroPadInput.type());
+
+            for (int i = 1; i < zeroPadInput.cols - 1; i++)
+            {
+                for (int j = 1; j < zeroPadInput.rows - 1; j++)
+                {
+                    bool highNeighbour = !(zeroPadInput.at<uchar>(j - 1, i - 1) != 255 &&
+                        zeroPadInput.at<uchar>(j, i - 1) != 255 &&
+                        zeroPadInput.at<uchar>(j + 1, i - 1) != 255 &&
+                        zeroPadInput.at<uchar>(j - 1, i) != 255 &&
+                        zeroPadInput.at<uchar>(j, i) != 255 &&
+                        zeroPadInput.at<uchar>(j + 1, i) != 255 &&
+                        zeroPadInput.at<uchar>(j - 1, i + 1) != 255 &&
+                        zeroPadInput.at<uchar>(j, i + 1) != 255 &&
+                        zeroPadInput.at<uchar>(j + 1, i + 1) != 255);
+
+                    if (highNeighbour)
+                    {
+                        zeroPadOutput.at<uchar>(j, i) = 255;
+                    }
+                }
+            }
+
+            return zeroPadOutput(cv::Rect(1, 1, input.cols, input.rows));
+        }
     } // namespace utils
 } // namespace ImageAnalysis

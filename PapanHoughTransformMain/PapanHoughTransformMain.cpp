@@ -8,12 +8,12 @@
 
 int main()
 {
-    cv::Mat gaussianKernel = (cv::Mat_<float>(3, 3) << 1, 2, 1, 2, 4, 2, 1, 2, 1);
-    gaussianKernel /= 16;
-
     auto img = cv::imread(".//..//Resources//testImage.jpg");
     auto imageAnalyser = ImageAnalysis::ImageAnalyzerSingleThread();
-    auto imgBlurred = imageAnalyser.GaussianBlur(img, gaussianKernel);
+    auto imgBlurred = imageAnalyser.GaussianBlur(img, 19);
+
+    cv::imshow("blurred difference", imgBlurred - img);
+    cv::waitKey(0);
 
     return 0;
 }

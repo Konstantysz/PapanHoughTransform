@@ -42,6 +42,27 @@ namespace ImageAnalysis
 
     }
         
+        cv::Mat Convolve(const cv::Mat& input, const cv::Mat& kernel)
+        {
+            int halfKernelSize = (kernel.cols - 1) / 2;
+
+            // Zero-pad matrix
+            cv::Mat zeroPadImage = cv::Mat::zeros(cv::Size(input.cols + 2 * halfKernelSize, input.rows + 2 * halfKernelSize), input.type());
+            input.copyTo(zeroPadImage(cv::Rect(halfKernelSize, halfKernelSize, input.cols, input.rows)));
+
+            cv::Mat convolutionResult = cv::Mat::zeros(cv::Size(zeroPadImage.cols, zeroPadImage.rows), input.type());
+
+            for (int i = halfKernelSize; i < zeroPadImage.cols - halfKernelSize; i++)
+            {
+                for (int j = halfKernelSize; j < zeroPadImage.rows - halfKernelSize; j++)
+                {
+                    ImageAnalysis::utils::SingleConvolve(zeroPadImage, convolutionResult, kernel, i, j);
+                }
+            }
+
+            return convolutionResult(cv::Rect(halfKernelSize, halfKernelSize, input.cols, input.rows));
+        }
+
         cv::Mat FilterKernelGenerator(int size)
         {
             if (size % 2 == 0)

@@ -194,5 +194,26 @@ namespace ImageAnalysis
             return result;
         }
 
+        cv::Mat DoubleThreshold(const cv::Mat& input, float lowThresholdRatio, float highThresholdRatio)
+        {
+            double inputMin, inputMax;
+            cv::minMaxLoc(input, &inputMin, &inputMax);
+
+            int highThreshold = int(inputMax * highThresholdRatio);
+            int lowThreshold = int(highThreshold * lowThresholdRatio);
+
+            cv::Mat result = cv::Mat::zeros(input.size(), input.type());
+
+            for (int i = 0; i < input.cols; i++)
+            {
+                for (int j = 0; j < input.rows; j++)
+                {
+                    result.at<uchar>(j, i) = (input.at<uchar>(j, i) >= lowThreshold) ? ((input.at<uchar>(j, i) >= highThreshold) ? 255 : 25) : 0;
+                }
+            }
+
+            return result;
+        }
+
     } // namespace utils
 } // namespace ImageAnalysis

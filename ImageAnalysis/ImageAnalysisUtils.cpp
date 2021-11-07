@@ -14,25 +14,25 @@ namespace ImageAnalysis
 
             switch (input.type()) {
             case CV_8U:
-                output.at<uchar>(j, i) = newValue;
+                output.at<uchar>(j, i) = uchar(newValue);
                 break;
             case CV_8S:
-                output.at<schar>(j, i) = newValue;
+                output.at<schar>(j, i) = schar(newValue);
                 break;
             case CV_16U:
-                output.at<ushort>(j, i) = newValue;
+                output.at<ushort>(j, i) = ushort(newValue);
                 break;
             case CV_16S:
-                output.at<short>(j, i) = newValue;
+                output.at<short>(j, i) = short(newValue);
                 break;
             case CV_32S:
-                output.at<int>(j, i) = newValue;
+                output.at<int>(j, i) = int(newValue);
                 break;
             case CV_32F:
-                output.at<float>(j, i) = newValue;
+                output.at<float>(j, i) = float(newValue);
                 break;
             case CV_64F:
-                output.at<double>(j, i) = newValue;
+                output.at<double>(j, i) = double(newValue);
                 break;
             default:
                 throw "KUUUUURWA";

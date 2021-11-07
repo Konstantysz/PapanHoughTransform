@@ -152,5 +152,47 @@ namespace ImageAnalysis
             return std::make_pair(G8u, theta8u);
         }
 
+        cv::Mat NonMaxSuppression(const cv::Mat& gradientIntensity, const cv::Mat& gradientDirection)
+        {
+            cv::Mat result = cv::Mat::zeros(gradientIntensity.size(), gradientIntensity.type());
+
+            for (int i = 1; i < gradientIntensity.cols - 1; i++)
+            {
+                for (int j = 1; j < gradientIntensity.rows - 1; j++)
+                {
+                    int q = 255;
+                    int r = 255;
+
+                    if (gradientDirection.at<uchar>(j, i) == 255)
+                    {
+                        q = gradientIntensity.at<uchar>(j + 1, i);
+                        r = gradientIntensity.at<uchar>(j - 1, i);
+                    }
+                    else if (gradientDirection.at<uchar>(j, i) == 63)
+                    {
+                        q = gradientIntensity.at<uchar>(j - 1, i + 1);
+                        r = gradientIntensity.at<uchar>(j + 1, i - 1);
+                    }
+                    else if (gradientDirection.at<uchar>(j, i) == 127)
+                    {
+                        q = gradientIntensity.at<uchar>(j, i + 1);
+                        r = gradientIntensity.at<uchar>(j, i - 1);
+                    }
+                    else if (gradientDirection.at<uchar>(j, i) == 191)
+                    {
+                        q = gradientIntensity.at<uchar>(j - 1, i - 1);
+                        r = gradientIntensity.at<uchar>(j + 1, i + 1);
+                    }
+
+                    if (gradientIntensity.at<uchar>(j, i) >= q && gradientIntensity.at<uchar>(j, i) >= r)
+                    {
+                        result.at<uchar>(j, i) = gradientIntensity.at<uchar>(j, i);
+                    }
+                }
+            }
+
+            return result;
+        }
+
     } // namespace utils
 } // namespace ImageAnalysis

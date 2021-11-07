@@ -10,8 +10,9 @@ int main()
 {
     auto img = cv::imread(".//..//Resources//testImage.jpg");
     auto imageAnalyser = ImageAnalysis::ImageAnalyzerSingleThread();
-    auto imgBlurred = imageAnalyser.GaussianBlur(img, 19);
+    auto imgBlurred = imageAnalyser.GaussianBlur(img, 3);
 
+    cv::namedWindow("blurred difference", cv::WINDOW_NORMAL);
     cv::imshow("blurred difference", imgBlurred - img);
     cv::waitKey(0);
 

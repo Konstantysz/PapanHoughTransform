@@ -91,5 +91,66 @@ namespace ImageAnalysis
             // normalising the Kernel
             return kernel /= sum;
         }
+
+        std::pair<cv::Mat, cv::Mat> Gradient(cv::Mat input)
+        {
+            cv::Mat input32F;
+            input.convertTo(input32F, CV_32F);
+
+            cv::Mat KernelGx = (cv::Mat_<float>(3, 3) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
+            cv::Mat KernelGy = (cv::Mat_<float>(3, 3) << 1, 2, 1, 0, 0, 0, -1, -2, -1);
+
+            cv::Mat Gx = ImageAnalysis::utils::Convolve(input32F, KernelGx);
+            cv::Mat Gy = ImageAnalysis::utils::Convolve(input32F, KernelGy);
+
+            cv::Mat GxPow2, GyPow2;
+            cv::pow(Gx, 2, GxPow2);
+            cv::pow(Gy, 2, GyPow2);
+
+            // Gradient intensity
+            cv::Mat G;
+            cv::sqrt(GxPow2 + GyPow2, G);
+
+            // Gradient direction
+            cv::Mat theta; 
+            cv::phase(Gx, Gy, theta);
+
+            // Change range from [0, 2PI] to [0, PI]
+            theta /= 2;
+
+            // Rounding direction to multiplications of 45 degree angles (namely 0, 45, 90 etc.)
+            // Also change values to range [0, 255]
+            for (int j = 0; j < theta.rows; j++)
+            {
+                for (int i = 0; i < theta.cols; i++)
+                {
+                    auto angle = theta.at<float>(j, i);
+                    if (angle >= CV_PI / 8 && angle < 3 * CV_PI / 8)
+                    {
+                        theta.at<float>(j, i) = 255 / 4;
+                    }
+                    else if (angle >= 3 * CV_PI / 8 && angle < 5 * CV_PI / 8)
+                    {
+                        theta.at<float>(j, i) = 255 / 2;
+                    }
+                    else if (angle >= 5 * CV_PI / 8 && angle < 7 * CV_PI / 8)
+                    {
+                        theta.at<float>(j, i) = 3 * 255 / 4;
+                    }
+                    else if (angle >= 7 * CV_PI / 8 || angle < CV_PI / 8)
+                    {
+                        theta.at<float>(j, i) = 0;
+                    }
+                }
+            }
+
+            cv::Mat G8u;
+            G.convertTo(G8u, CV_8U);
+            cv::Mat theta8u;
+            theta.convertTo(theta8u, CV_8U);
+
+            return std::make_pair(G8u, theta8u);
+        }
+
     } // namespace utils
 } // namespace ImageAnalysis

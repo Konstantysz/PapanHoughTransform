@@ -226,19 +226,22 @@ namespace ImageAnalysis
             {
                 for (int j = 1; j < zeroPadInput.rows - 1; j++)
                 {
-                    bool highNeighbour = !(zeroPadInput.at<uchar>(j - 1, i - 1) != 255 &&
-                        zeroPadInput.at<uchar>(j, i - 1) != 255 &&
-                        zeroPadInput.at<uchar>(j + 1, i - 1) != 255 &&
-                        zeroPadInput.at<uchar>(j - 1, i) != 255 &&
-                        zeroPadInput.at<uchar>(j, i) != 255 &&
-                        zeroPadInput.at<uchar>(j + 1, i) != 255 &&
-                        zeroPadInput.at<uchar>(j - 1, i + 1) != 255 &&
-                        zeroPadInput.at<uchar>(j, i + 1) != 255 &&
-                        zeroPadInput.at<uchar>(j + 1, i + 1) != 255);
-
-                    if (highNeighbour)
+                    if (zeroPadInput.at<uchar>(j, i) != 0)
                     {
-                        zeroPadOutput.at<uchar>(j, i) = 255;
+                        bool highNeighbour = !(zeroPadInput.at<uchar>(j - 1, i - 1) != 255 &&
+                            zeroPadInput.at<uchar>(j, i - 1) != 255 &&
+                            zeroPadInput.at<uchar>(j + 1, i - 1) != 255 &&
+                            zeroPadInput.at<uchar>(j - 1, i) != 255 &&
+                            zeroPadInput.at<uchar>(j, i) != 255 &&
+                            zeroPadInput.at<uchar>(j + 1, i) != 255 &&
+                            zeroPadInput.at<uchar>(j - 1, i + 1) != 255 &&
+                            zeroPadInput.at<uchar>(j, i + 1) != 255 &&
+                            zeroPadInput.at<uchar>(j + 1, i + 1) != 255);
+
+                        if (highNeighbour)
+                        {
+                            zeroPadOutput.at<uchar>(j, i) = 255;
+                        }
                     }
                 }
             }

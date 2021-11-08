@@ -17,7 +17,7 @@ int main()
     cv::imshow("grayscale image", imgGray);
     cv::waitKey(0);
 
-    auto imgEdges = imageAnalyser.Canny(imgGray, 0.15, 0.40);
+    auto imgEdges = imageAnalyser.Canny(imgGray, 0.1, 0.3);
     cv::namedWindow("edge image", cv::WINDOW_KEEPRATIO);
     cv::imshow("edge image", imgEdges);
     cv::waitKey(0);

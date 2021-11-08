@@ -119,10 +119,12 @@ namespace ImageAnalysis
 		if (input.channels() != 1) throw "grayscale!";
 
 		// 1. Noise reduction
-		auto imgBlurred = GaussianBlur(input, 3);
+		auto imgBlurred = GaussianBlur(input, 7);
 
 		// 2. Gradients
 		auto gradientsInfo = ImageAnalysis::utils::Gradient(imgBlurred);
+		auto gradIntensity = gradientsInfo.first;
+		auto gradOrientation = gradientsInfo.second;
 
 		// 3. Non-Maximum Suppression
 		auto nonMaxSuppressed = ImageAnalysis::utils::NonMaxSuppression(gradientsInfo.first, gradientsInfo.second);

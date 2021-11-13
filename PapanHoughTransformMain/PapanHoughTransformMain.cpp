@@ -10,6 +10,7 @@ int main()
 {
     auto img = cv::imread(".//..//Resources//testImage.jpg");
     //auto img = cv::imread(".//..//Resources//gayMaria.png");
+
     auto imageAnalyser = ImageAnalysis::ImageAnalyzerSingleThread();
 
     auto imgGray = imageAnalyser.BGR2Grayscale(img);

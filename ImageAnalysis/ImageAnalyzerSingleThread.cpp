@@ -3,10 +3,10 @@
 
 namespace ImageAnalysis
 {
-	cv::Mat ImageAnalyzerSingleThread::GaussianBlur(const cv::Mat& input, const int& kernelSize)
+	cv::Mat ImageAnalyzerSingleThread::GaussianBlur(const cv::Mat& input, const int& kernelSize, const double& sigma)
 	{
 		// Generate kernel
-		cv::Mat kernel = ImageAnalysis::utils::FilterKernelGenerator(kernelSize);
+		cv::Mat kernel = ImageAnalysis::utils::GaussianKernelGenerator(kernelSize, sigma);
 		int halfKernelSize = (kernelSize - 1) / 2;
 
 		// Split image to channels to itarate over pixels image channel independently

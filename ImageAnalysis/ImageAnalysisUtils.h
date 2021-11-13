@@ -8,7 +8,7 @@ namespace ImageAnalysis
 		
 		cv::Mat Convolve(const cv::Mat& input, const cv::Mat& kernel);
 
-		cv::Mat FilterKernelGenerator(int size);
+		cv::Mat GaussianKernelGenerator(int size, double sigma);
 
 		std::pair<cv::Mat, cv::Mat> Gradient(cv::Mat input);
 

@@ -63,7 +63,7 @@ namespace ImageAnalysis
             return convolutionResult(cv::Rect(halfKernelSize, halfKernelSize, input.cols, input.rows));
         }
 
-        cv::Mat FilterKernelGenerator(int size)
+        cv::Mat GaussianKernelGenerator(int size, double sigma)
         {
             if (size % 2 == 0)
             {
@@ -71,7 +71,6 @@ namespace ImageAnalysis
             }
 
             // initialising standard deviation to 1.0
-            double sigma = 1.0;
             double s = 2.0 * sigma * sigma;
 
             // sum is for normalization

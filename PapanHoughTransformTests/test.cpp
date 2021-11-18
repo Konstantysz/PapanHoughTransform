@@ -41,9 +41,16 @@ protected:
 TEST_F(TestImageAnalyzerSingleThread, BGR2Gray) 
 {
 	cv::Mat cvResult; 
-	cv::cvtColor(*testImage, cvResult, cv::COLOR_BGR2GRAY);
-
-	cv::Mat iaResult = imageAnalyzer->BGR2Grayscale(*testImage);
+	{
+		[[maybe_unused]] ImageAnalysis::utils::Timer t("Color converion OpenCV");
+		cv::cvtColor(*testImage, cvResult, cv::COLOR_BGR2GRAY);
+	}
+	
+	cv::Mat iaResult;
+	{
+		[[maybe_unused]] ImageAnalysis::utils::Timer t("Color converion single thread");
+		iaResult = imageAnalyzer->BGR2Grayscale(*testImage);
+	}
 	double error = GetSimilarityRMS(cvResult, iaResult);
 
 	EXPECT_TRUE(error < 0.1);
@@ -52,12 +59,20 @@ TEST_F(TestImageAnalyzerSingleThread, BGR2Gray)
 TEST_F(TestImageAnalyzerSingleThread, GaussianBlur) 
 {	
 	std::vector<double> errors;
-	for (int n = 3; n < 5; n += 2)
+	for (int n = 3; n <= 9; n += 2)
 	{
 		cv::Mat cvResult;
-		cv::GaussianBlur(*testImage, cvResult, cv::Size(n, n), 1);
+		{
+			[[maybe_unused]] ImageAnalysis::utils::Timer t("GaussianBlur " + std::to_string(n) + "x" + std::to_string(n) + " OpenCV");
+			cv::GaussianBlur(*testImage, cvResult, cv::Size(n, n), 1);
+		}
 
-		cv::Mat iaResult = imageAnalyzer->GaussianBlur(*testImage, n, 1);
+		cv::Mat iaResult;
+		{
+			[[maybe_unused]] ImageAnalysis::utils::Timer t("GaussianBlur " + std::to_string(n) + "x" + std::to_string(n) + " single thread");
+			iaResult = imageAnalyzer->GaussianBlur(*testImage, n, 1);
+		}
+
 		errors.push_back(GetSimilarityRMS(cvResult, iaResult));
 	}
 
@@ -76,9 +91,16 @@ TEST_F(TestImageAnalyzerSingleThread, Canny)
 	//cv::threshold(imgGrayscale, imgBinarized, 27, 255, cv::THRESH_OTSU);
 
 	cv::Mat cvResult;
-	cv::Canny(*testImage, cvResult, lowThres, highThres);
+	{ 
+		[[maybe_unused]] ImageAnalysis::utils::Timer t("Canny OpenCV");
+		cv::Canny(*testImage, cvResult, lowThres, highThres);
+	}
 
-	cv::Mat iaResult = imageAnalyzer->Canny(*testImage, lowThres, highThres);
+	cv::Mat iaResult;
+	{
+		[[maybe_unused]] ImageAnalysis::utils::Timer t("Canny single thread");
+		iaResult = imageAnalyzer->Canny(*testImage, lowThres, highThres);
+	}
 	auto error = GetSimilarityRMS(cvResult, iaResult);
 
 	EXPECT_TRUE(error < 0.1);

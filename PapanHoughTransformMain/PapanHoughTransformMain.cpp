@@ -18,12 +18,12 @@ int main()
     cv::imshow("grayscale image", imgGray);
     cv::waitKey(0);
 
-    auto imgEdges = imageAnalyser.Canny(imgGray, 0.1, 0.3);
+    auto imgEdges = imageAnalyser.Canny(imgGray, 0.05, 0.6);
     cv::namedWindow("edge image", cv::WINDOW_KEEPRATIO);
     cv::imshow("edge image", imgEdges);
     cv::waitKey(0);
 
-    auto circles = imageAnalyser.CircleHoughTransform(imgEdges, 20, 50);
+    auto circles = imageAnalyser.CircleHoughTransform(imgEdges, 20, 40);
     for (const auto& circle : circles)
     {
         cv::circle(img, circle.second, circle.first, cv::Scalar(0, 0, 255));

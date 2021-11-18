@@ -1,5 +1,6 @@
 #pragma once
 #include <chrono>
+#include <windows.h>
 
 namespace ImageAnalysis
 {
@@ -13,10 +14,17 @@ namespace ImageAnalysis
 				functionName = name;
 				tic = std::chrono::steady_clock::now();
 			}
+
 			~Timer()
 			{
+				HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 				auto toc = std::chrono::steady_clock::now();
-				std::cout << "[" + functionName + "] Time elapsed: " << std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() << "[µs]" << std::endl;
+				auto time = std::chrono::duration_cast<std::chrono::milliseconds>(toc - tic).count();
+
+				SetConsoleTextAttribute(hConsole, 11);
+				std::cout << "[" + functionName + "] ";
+				SetConsoleTextAttribute(hConsole, 15);
+				std::cout << "Time elapsed: " << time << "[ms]" << std::endl;
 			}
 		private:
 			std::string functionName;

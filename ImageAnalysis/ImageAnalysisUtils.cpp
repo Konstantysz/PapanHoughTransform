@@ -109,7 +109,7 @@ namespace ImageAnalysis
             return kernel /= sum;
         }
 
-        std::pair<cv::Mat, cv::Mat> Gradient(cv::Mat input)
+        std::pair<cv::Mat, cv::Mat> Gradient(const cv::Mat& input)
         {
             cv::Mat input32F;
             input.convertTo(input32F, CV_32F);

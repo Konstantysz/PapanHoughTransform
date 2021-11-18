@@ -6,6 +6,8 @@ namespace ImageAnalysis
 	{
 		void SingleConvolve(const cv::Mat& input, cv::Mat& output, const cv::Mat& kernel, const int& i, const int& j);
 		
+		cv::Mat ConvolveZeroPad(const cv::Mat& input, const cv::Mat& kernel);
+
 		cv::Mat Convolve(const cv::Mat& input, const cv::Mat& kernel);
 
 		cv::Mat GaussianKernelGenerator(int size, double sigma);

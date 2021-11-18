@@ -42,7 +42,7 @@ namespace ImageAnalysis
 
     }
         
-        cv::Mat Convolve(const cv::Mat& input, const cv::Mat& kernel)
+        cv::Mat ConvolveZeroPad(const cv::Mat& input, const cv::Mat& kernel)
         {
             int halfKernelSize = (kernel.cols - 1) / 2;
 
@@ -61,6 +61,24 @@ namespace ImageAnalysis
             }
 
             return convolutionResult(cv::Rect(halfKernelSize, halfKernelSize, input.cols, input.rows));
+        }
+
+        cv::Mat Convolve(const cv::Mat& input, const cv::Mat& kernel)
+        {
+            int halfKernelSize = (kernel.cols - 1) / 2;
+
+            cv::Mat convolutionResult;
+            input.convertTo(convolutionResult, input.type());
+
+            for (int i = halfKernelSize; i < input.cols - halfKernelSize; i++)
+            {
+                for (int j = halfKernelSize; j < input.rows - halfKernelSize; j++)
+                {
+                    ImageAnalysis::utils::SingleConvolve(input, convolutionResult, kernel, i, j);
+                }
+            }
+
+            return convolutionResult;
         }
 
         cv::Mat GaussianKernelGenerator(int size, double sigma)

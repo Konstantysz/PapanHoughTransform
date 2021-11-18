@@ -13,7 +13,7 @@ class TestImageAnalyzerSingleThread : public ::testing::Test
 protected:
 	void SetUp() 
 	{
-		testImage = std::make_shared<cv::Mat>(cv::imread(".//..//Resources//gayMaria.png"));
+		testImage = std::make_shared<cv::Mat>(cv::imread(".//..//Resources//testImage.jpg"));
 		imageAnalyzer = std::make_shared<ImageAnalysis::ImageAnalyzerSingleThread>();
 	}
 
@@ -52,7 +52,7 @@ TEST_F(TestImageAnalyzerSingleThread, BGR2Gray)
 TEST_F(TestImageAnalyzerSingleThread, GaussianBlur) 
 {	
 	std::vector<double> errors;
-	for (int n = 1; n < 15; n += 2)
+	for (int n = 3; n < 5; n += 2)
 	{
 		cv::Mat cvResult;
 		cv::GaussianBlur(*testImage, cvResult, cv::Size(n, n), 1);
@@ -64,6 +64,24 @@ TEST_F(TestImageAnalyzerSingleThread, GaussianBlur)
 	auto maxError = *std::max_element(errors.begin(), errors.end());
 
 	EXPECT_TRUE(maxError < 0.1);
+}
+
+TEST_F(TestImageAnalyzerSingleThread, Canny)
+{
+	double lowThres = 0.05;
+	double highThres = 0.6;
+
+	//cv::Mat imgBinarized, imgGrayscale;
+	//cv::cvtColor(*testImage, imgGrayscale, cv::COLOR_BGR2GRAY);
+	//cv::threshold(imgGrayscale, imgBinarized, 27, 255, cv::THRESH_OTSU);
+
+	cv::Mat cvResult;
+	cv::Canny(*testImage, cvResult, lowThres, highThres);
+
+	cv::Mat iaResult = imageAnalyzer->Canny(*testImage, lowThres, highThres);
+	auto error = GetSimilarityRMS(cvResult, iaResult);
+
+	EXPECT_TRUE(error < 0.1);
 }
 
 int main(int argc, char** argv) {

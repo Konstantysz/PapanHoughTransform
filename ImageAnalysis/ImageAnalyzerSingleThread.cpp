@@ -116,10 +116,19 @@ namespace ImageAnalysis
 
 	cv::Mat ImageAnalyzerSingleThread::Canny(const cv::Mat& input, float lowThresholdRatio, float highThresholdRatio)
 	{
-		if (input.channels() != 1) throw "grayscale!";
+		cv::Mat imgGrayscale;
+		if (input.channels() != 1)
+		{
+			std::cout << "Image had to be converted into grayscale!" << std::endl;
+			imgGrayscale = BGR2Grayscale(input);
+		}
+		else
+		{
+			imgGrayscale = input;
+		}
 
 		// 1. Noise reduction
-		auto imgBlurred = GaussianBlur(input, 7);
+		auto imgBlurred = GaussianBlur(imgGrayscale, 5);
 
 		// 2. Gradients
 		auto gradientsInfo = ImageAnalysis::utils::Gradient(imgBlurred);

@@ -156,13 +156,20 @@ namespace ImageAnalysis
                     }
                     else if (angle >= 7 * CV_PI / 8 || angle < CV_PI / 8)
                     {
-                        theta.at<float>(j, i) = 0;
+                        theta.at<float>(j, i) = 255;
                     }
                 }
             }
 
+            // Scaling gradient to values [0-255]
+            double gMin, gMax;
+            cv::minMaxLoc(G, &gMin, &gMax);
+            G /= gMax;
+            G *= 255;
+
             cv::Mat G8u;
             G.convertTo(G8u, CV_8U);
+
             cv::Mat theta8u;
             theta.convertTo(theta8u, CV_8U);
 

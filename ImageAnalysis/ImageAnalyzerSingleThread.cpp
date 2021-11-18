@@ -151,10 +151,10 @@ namespace ImageAnalysis
 	{
 		auto circles = std::vector<CircleParameters>();
 
+		cv::Mat accumulator = cv::Mat::zeros(input.size(), CV_32F);
+
 		for (int r = lowRadiusThreshold; r <= highRadiusThreshold; r++)
 		{
-			cv::Mat accumulator = cv::Mat::zeros(input.size(), CV_32F);
-
 			for (int t = 0; t < 360; t++)
 			{
 				for (int i = 0; i < input.cols; i++)
@@ -174,17 +174,25 @@ namespace ImageAnalysis
 				}
 			}
 
-			for (int i = 0; i < accumulator.cols; i++)
-			{
-				for (int j = 0; j < accumulator.rows; j++)
-				{
-					if (accumulator.at<float>(j, i) > 2 * CV_PI * r * 0.9)
-					{
-						circles.push_back(std::make_pair(r, cv::Point2i(i, j)));
-					}
-				}
-			}
+			//for (int i = 0; i < accumulator.cols; i++)
+			//{
+			//	for (int j = 0; j < accumulator.rows; j++)
+			//	{
+			//		if (accumulator.at<float>(j, i) > 2 * CV_PI * r * 0.9)
+			//		{
+			//			circles.push_back(std::make_pair(r, cv::Point2i(i, j)));
+			//		}
+			//	}
+			//}
 		}
+
+		double min, max;
+		cv::minMaxLoc(accumulator, &min, &max);
+		accumulator /= max;
+		accumulator *= 255;
+
+		cv::Mat accumulator8u;
+		accumulator.convertTo(accumulator8u, CV_8U);
 
 		return circles;
 	}

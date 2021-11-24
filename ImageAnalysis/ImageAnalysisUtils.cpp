@@ -6,6 +6,27 @@ namespace ImageAnalysis
 {
     namespace utils 
     {
+        std::array<int, 256> Histogram(const cv::Mat& input)
+        {
+            if (input.type() != CV_8UC1)
+            {
+                // TODO: Conversion to proper type
+                return std::array<int, 256>();
+            }
+
+            auto histogram = std::array<int, 256>();
+
+            for (int i = 0; i < input.rows; i++) 
+            {
+                for (int j = 0; j < input.cols; j++)
+                {
+                    histogram[(int)input.at<uchar>(i, j)]++;
+                }
+            }
+
+            return histogram;
+        }
+        
         void SingleConvolve(const cv::Mat& input, cv::Mat& output, const cv::Mat& kernel, const int& i, const int& j)
         {
             cv::Mat roi;
@@ -42,7 +63,7 @@ namespace ImageAnalysis
 
     }
         
-        cv::Mat Convolve(const cv::Mat& input, const cv::Mat& kernel)
+        cv::Mat ConvolveZeroPad(const cv::Mat& input, const cv::Mat& kernel)
         {
             int halfKernelSize = (kernel.cols - 1) / 2;
 
@@ -63,7 +84,25 @@ namespace ImageAnalysis
             return convolutionResult(cv::Rect(halfKernelSize, halfKernelSize, input.cols, input.rows));
         }
 
-        cv::Mat FilterKernelGenerator(int size)
+        cv::Mat Convolve(const cv::Mat& input, const cv::Mat& kernel)
+        {
+            int halfKernelSize = (kernel.cols - 1) / 2;
+
+            cv::Mat convolutionResult;
+            input.convertTo(convolutionResult, input.type());
+
+            for (int i = halfKernelSize; i < input.cols - halfKernelSize; i++)
+            {
+                for (int j = halfKernelSize; j < input.rows - halfKernelSize; j++)
+                {
+                    ImageAnalysis::utils::SingleConvolve(input, convolutionResult, kernel, i, j);
+                }
+            }
+
+            return convolutionResult;
+        }
+
+        cv::Mat GaussianKernelGenerator(int size, double sigma)
         {
             if (size % 2 == 0)
             {
@@ -71,7 +110,6 @@ namespace ImageAnalysis
             }
 
             // initialising standard deviation to 1.0
-            double sigma = 1.0;
             double s = 2.0 * sigma * sigma;
 
             // sum is for normalization
@@ -92,7 +130,7 @@ namespace ImageAnalysis
             return kernel /= sum;
         }
 
-        std::pair<cv::Mat, cv::Mat> Gradient(cv::Mat input)
+        std::pair<cv::Mat, cv::Mat> Gradient(const cv::Mat& input)
         {
             cv::Mat input32F;
             input.convertTo(input32F, CV_32F);
@@ -139,13 +177,20 @@ namespace ImageAnalysis
                     }
                     else if (angle >= 7 * CV_PI / 8 || angle < CV_PI / 8)
                     {
-                        theta.at<float>(j, i) = 0;
+                        theta.at<float>(j, i) = 255;
                     }
                 }
             }
 
+            // Scaling gradient to values [0-255]
+            double gMin, gMax;
+            cv::minMaxLoc(G, &gMin, &gMax);
+            G /= gMax;
+            G *= 255;
+
             cv::Mat G8u;
             G.convertTo(G8u, CV_8U);
+
             cv::Mat theta8u;
             theta.convertTo(theta8u, CV_8U);
 

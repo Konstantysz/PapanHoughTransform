@@ -6,6 +6,27 @@ namespace ImageAnalysis
 {
     namespace utils 
     {
+        std::array<int, 256> Histogram(const cv::Mat& input)
+        {
+            if (input.type() != CV_8UC1)
+            {
+                // TODO: Conversion to proper type
+                return std::array<int, 256>();
+            }
+
+            auto histogram = std::array<int, 256>();
+
+            for (int i = 0; i < input.rows; i++) 
+            {
+                for (int j = 0; j < input.cols; j++)
+                {
+                    histogram[(int)input.at<uchar>(i, j)]++;
+                }
+            }
+
+            return histogram;
+        }
+        
         void SingleConvolve(const cv::Mat& input, cv::Mat& output, const cv::Mat& kernel, const int& i, const int& j)
         {
             cv::Mat roi;

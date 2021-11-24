@@ -13,15 +13,19 @@ class TestImageAnalyzerSingleThread : public ::testing::Test
 protected:
 	void SetUp() 
 	{
-		testImage = std::make_shared<cv::Mat>(cv::imread(".//..//Resources//testImage.jpg"));
+		testImage = cv::imread(".//..//Resources//testImage.jpg");
 		imageAnalyzer = std::make_shared<ImageAnalysis::ImageAnalyzerSingleThread>();
+		cv::cvtColor(testImage, testImageGrayscale, cv::COLOR_BGR2GRAY);
+		cv::threshold(testImageGrayscale, testImageBinarized, 27, 255, cv::THRESH_OTSU);
 	}
 
 	void TearDown() 
 	{
 	}
 
-	std::shared_ptr<cv::Mat> testImage;
+	cv::Mat testImage;
+	cv::Mat testImageGrayscale;
+	cv::Mat testImageBinarized;
 	std::shared_ptr<ImageAnalysis::ImageAnalyzerSingleThread> imageAnalyzer;
 	
 	double GetSimilarityRMS(const cv::Mat& A, const cv::Mat& B) {
@@ -38,18 +42,36 @@ protected:
 
 };
 
+TEST_F(TestImageAnalyzerSingleThread, OtsuThreshold)
+{
+	cv::Mat cvResult;
+	{
+		[[maybe_unused]] ImageAnalysis::utils::Timer t("Threshold Otsu OpenCV");
+		cv::threshold(testImageGrayscale, cvResult, 127, 255, cv::THRESH_OTSU);
+	}
+
+	cv::Mat iaResult;
+	{
+		[[maybe_unused]] ImageAnalysis::utils::Timer t("Threshold Otsu single thread");
+		iaResult = imageAnalyzer->OtsuThreshold(testImageGrayscale, 127);
+	}
+	double error = GetSimilarityRMS(cvResult, iaResult);
+
+	EXPECT_TRUE(error < 0.1);
+}
+
 TEST_F(TestImageAnalyzerSingleThread, BGR2Gray) 
 {
 	cv::Mat cvResult; 
 	{
 		[[maybe_unused]] ImageAnalysis::utils::Timer t("Color converion OpenCV");
-		cv::cvtColor(*testImage, cvResult, cv::COLOR_BGR2GRAY);
+		cv::cvtColor(testImage, cvResult, cv::COLOR_BGR2GRAY);
 	}
 	
 	cv::Mat iaResult;
 	{
 		[[maybe_unused]] ImageAnalysis::utils::Timer t("Color converion single thread");
-		iaResult = imageAnalyzer->BGR2Grayscale(*testImage);
+		iaResult = imageAnalyzer->BGR2Grayscale(testImage);
 	}
 	double error = GetSimilarityRMS(cvResult, iaResult);
 
@@ -64,13 +86,13 @@ TEST_F(TestImageAnalyzerSingleThread, GaussianBlur)
 		cv::Mat cvResult;
 		{
 			[[maybe_unused]] ImageAnalysis::utils::Timer t("GaussianBlur " + std::to_string(n) + "x" + std::to_string(n) + " OpenCV");
-			cv::GaussianBlur(*testImage, cvResult, cv::Size(n, n), 1);
+			cv::GaussianBlur(testImage, cvResult, cv::Size(n, n), 1);
 		}
 
 		cv::Mat iaResult;
 		{
 			[[maybe_unused]] ImageAnalysis::utils::Timer t("GaussianBlur " + std::to_string(n) + "x" + std::to_string(n) + " single thread");
-			iaResult = imageAnalyzer->GaussianBlur(*testImage, n, 1);
+			iaResult = imageAnalyzer->GaussianBlur(testImage, n, 1);
 		}
 
 		errors.push_back(GetSimilarityRMS(cvResult, iaResult));
@@ -83,23 +105,19 @@ TEST_F(TestImageAnalyzerSingleThread, GaussianBlur)
 
 TEST_F(TestImageAnalyzerSingleThread, Canny)
 {
-	double lowThres = 0.05;
+	double lowThres = 0.3;
 	double highThres = 0.6;
-
-	//cv::Mat imgBinarized, imgGrayscale;
-	//cv::cvtColor(*testImage, imgGrayscale, cv::COLOR_BGR2GRAY);
-	//cv::threshold(imgGrayscale, imgBinarized, 27, 255, cv::THRESH_OTSU);
 
 	cv::Mat cvResult;
 	{ 
 		[[maybe_unused]] ImageAnalysis::utils::Timer t("Canny OpenCV");
-		cv::Canny(*testImage, cvResult, lowThres, highThres);
+		cv::Canny(testImageBinarized, cvResult, lowThres, highThres);
 	}
 
 	cv::Mat iaResult;
 	{
 		[[maybe_unused]] ImageAnalysis::utils::Timer t("Canny single thread");
-		iaResult = imageAnalyzer->Canny(*testImage, lowThres, highThres);
+		iaResult = imageAnalyzer->Canny(testImageBinarized, lowThres, highThres);
 	}
 	auto error = GetSimilarityRMS(cvResult, iaResult);
 

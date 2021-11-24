@@ -3,7 +3,11 @@
 
 namespace ImageAnalysis
 {
-	cv::Mat ImageAnalyzerSingleThread::GaussianBlur(const cv::Mat& input, const int& kernelSize, const double& sigma)
+	cv::Mat ImageAnalyzerSingleThread::GaussianBlur(
+		const cv::Mat& input, 
+		const int& kernelSize, 
+		const double& sigma
+	)
 	{
 		// Generate kernel
 		cv::Mat kernel = ImageAnalysis::utils::GaussianKernelGenerator(kernelSize, sigma);
@@ -23,6 +27,66 @@ namespace ImageAnalysis
 		cv::merge(convolutionResultVector, output);
 
 		// Delete zero-pad and return
+		return output;
+	}
+
+	cv::Mat ImageAnalyzerSingleThread::LoGFilter(
+		const cv::Mat& input, 
+		const int& kernelSize, 
+		const double& sigma
+	)
+	{
+		return cv::Mat();
+	}
+
+	cv::Mat ImageAnalyzerSingleThread::OtsuThreshold(
+		const cv::Mat& input, 
+		const int& thresholdValue
+	)
+	{
+		int N = input.rows * input.cols;
+		auto histogram = utils::Histogram(input);
+
+		double sum = 0;
+		for (int v = 0; v < 256; v++)
+		{
+			sum += v * histogram[v];
+		}
+
+		double q1 = 0;
+		double q2 = 0;
+		double u1 = 0;
+		double u2 = 0;
+		double sumB = 0;
+		double varMax = 0;
+		int threshold = 0;
+		for (int v = 0; v < 256; v++)
+		{
+			q1 += histogram[v];
+			if (q1 == 0) continue;
+			q2 = N - q1;
+			sumB += v * histogram[v];
+			u1 = sumB / q1;
+			u2 = (sum - sumB) / q2;
+			double var = q1 * q2 * (u1 - u2) * (u1 - u2);
+
+			if (var > varMax)
+			{
+				threshold = v;
+				varMax = var;
+			}
+		}
+
+		cv::Mat output;
+		input.copyTo(output);
+		for (int i = 0; i < input.cols; i++)
+		{
+			for (int j = 0; j < input.rows; j++)
+			{
+				output.at<uchar>(j, i) = (output.at<uchar>(j, i) > threshold) ? 255 : 0;
+			}
+		}
+
 		return output;
 	}
 
@@ -114,7 +178,11 @@ namespace ImageAnalysis
 		return grayscaleOutput;
 	}
 
-	cv::Mat ImageAnalyzerSingleThread::Canny(const cv::Mat& input, float lowThresholdRatio, float highThresholdRatio)
+	cv::Mat ImageAnalyzerSingleThread::Canny(
+		const cv::Mat& input, 
+		const float& lowThresholdRatio, 
+		const float& highThresholdRatio
+	)
 	{
 		cv::Mat imgGrayscale;
 		if (input.channels() != 1)
@@ -147,13 +215,23 @@ namespace ImageAnalysis
 		return cannyEdges;
 	}
 
-	std::vector<CircleParameters> ImageAnalyzerSingleThread::CircleHoughTransform(const cv::Mat& input, const int& lowRadiusThreshold, const int& highRadiusThreshold)
+	std::vector<Circle> ImageAnalyzerSingleThread::CircleHoughTransform(
+		const cv::Mat& input, 
+		const int& lowRadiusThreshold, 
+		const int& highRadiusThreshold,
+		const int& minDistance
+	)
 	{
-		auto circles = std::vector<CircleParameters>();
+		auto circles = std::vector<Circle>();
 
-		cv::Mat accumulator = cv::Mat::zeros(input.size(), CV_32F);
+		auto accumulator = std::vector<cv::Mat>(highRadiusThreshold - lowRadiusThreshold + 1);
+		for (auto& layer : accumulator)
+		{
+			layer = cv::Mat::zeros(input.size(), CV_32S);
+		}
 
-		for (int r = lowRadiusThreshold; r <= highRadiusThreshold; r++)
+		//!< Voting
+		for (size_t r = lowRadiusThreshold; r <= highRadiusThreshold; r++)
 		{
 			for (int t = 0; t < 360; t++)
 			{
@@ -167,34 +245,62 @@ namespace ImageAnalysis
 							int a = i - r * cos(t * CV_PI / 180);
 							if (a > 0 && a < input.cols && b > 0 && b < input.rows)
 							{
-								accumulator.at<float>(b, a) += 1.F;
+								accumulator[r - static_cast<size_t>(lowRadiusThreshold)].at<int>(b, a)++;
 							}
 						}
 					}
 				}
 			}
-
-			//for (int i = 0; i < accumulator.cols; i++)
-			//{
-			//	for (int j = 0; j < accumulator.rows; j++)
-			//	{
-			//		if (accumulator.at<float>(j, i) > 2 * CV_PI * r * 0.9)
-			//		{
-			//			circles.push_back(std::make_pair(r, cv::Point2i(i, j)));
-			//		}
-			//	}
-			//}
 		}
 
-		double min, max;
-		cv::minMaxLoc(accumulator, &min, &max);
-		accumulator /= max;
-		accumulator *= 255;
+		//!< Extracting circles data
+		for (size_t r = lowRadiusThreshold; r <= highRadiusThreshold; r++)
+		{
+			size_t id = r - static_cast<size_t>(lowRadiusThreshold);
+			int minimalVotes = 2 * CV_PI * r * 0.9;
+			for (int i = 0; i < accumulator[id].cols; i++)
+			{
+				for (int j = 0; j < accumulator[id].rows; j++)
+				{
+					if (accumulator[id].at<int>(j, i) > minimalVotes)
+					{
+						circles.push_back(Circle(i, j, r, accumulator[id].at<int>(j, i)));
+					}
+				}
+			}
+		}
 
-		cv::Mat accumulator8u;
-		accumulator.convertTo(accumulator8u, CV_8U);
+		//!< Circles filtration to remove repeating circles
+		std::vector<Circle> resultCircles;
+		for (auto circle = circles.begin(); circle != circles.end(); ++circle)
+		{
+			if (!circle->filtered)
+			{
+				std::vector<Circle> neighbours;
+				neighbours.push_back(*circle);
+				circle->filtered = true;
+				for (auto otherCircle = circle; otherCircle != circles.end(); ++otherCircle)
+				{
+					int centerDistance = static_cast<int>(std::sqrt(
+						(circle->x - otherCircle->x) * (circle->x - otherCircle->x) + (circle->y - otherCircle->y) * (circle->y - otherCircle->y)
+					));
+					if (centerDistance < minDistance)
+					{
+						neighbours.push_back(*otherCircle);
+						otherCircle->filtered = true;
+					}
+				}
 
-		return circles;
+				auto bestCircle = std::max_element(neighbours.begin(), neighbours.end(),
+					[](const Circle& a, const Circle& b)
+					{
+						return a.probability < b.probability;
+					});
+				resultCircles.push_back(*bestCircle);
+			}
+		}
+
+		return resultCircles;
 	}
 
 }

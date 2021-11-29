@@ -39,9 +39,13 @@ namespace ImageAnalysis
 
 		cv::Mat Convolve(const cv::Mat& input, const cv::Mat& kernel);
 
+		cv::Mat ConvolveMT(const cv::Mat& input, const cv::Mat& kernel);
+
 		cv::Mat GaussianKernelGenerator(int size, double sigma);
 
 		std::pair<cv::Mat, cv::Mat> Gradient(const cv::Mat& input);
+
+		std::pair<cv::Mat, cv::Mat> GradientMT(const cv::Mat& input);
 
 		cv::Mat NonMaxSuppression(const cv::Mat& gradientIntensity, const cv::Mat& gradientDirection);
 

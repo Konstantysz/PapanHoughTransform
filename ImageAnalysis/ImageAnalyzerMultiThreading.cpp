@@ -1,11 +1,11 @@
 #include "pch.h"
-#include "ImageAnalyzerSingleThread.h"
+#include "ImageAnalyzerMultiThreading.h"
 
 namespace ImageAnalysis
 {
-	cv::Mat ImageAnalyzerSingleThread::GaussianBlur(
-		const cv::Mat& input, 
-		const int& kernelSize, 
+	cv::Mat ImageAnalyzerMultiThreading::GaussianBlur(
+		const cv::Mat& input,
+		const int& kernelSize,
 		const double& sigma
 	)
 	{
@@ -20,7 +20,7 @@ namespace ImageAnalysis
 
 		for (int k = 0; k < channelVector.size(); k++)
 		{
-			convolutionResultVector[k] = ImageAnalysis::utils::Convolve(channelVector[k], kernel);
+			convolutionResultVector[k] = ImageAnalysis::utils::ConvolveMT(channelVector[k], kernel);
 		}
 
 		cv::Mat output = cv::Mat(cv::Size(input.cols, input.rows), input.type());
@@ -30,8 +30,8 @@ namespace ImageAnalysis
 		return output;
 	}
 
-	cv::Mat ImageAnalyzerSingleThread::OtsuThreshold(
-		const cv::Mat& input, 
+	cv::Mat ImageAnalyzerMultiThreading::OtsuThreshold(
+		const cv::Mat& input,
 		const int& thresholdValue
 	)
 	{
@@ -81,7 +81,7 @@ namespace ImageAnalysis
 		return output;
 	}
 
-	cv::Mat ImageAnalyzerSingleThread::BGR2Grayscale(const cv::Mat& input)
+	cv::Mat ImageAnalyzerMultiThreading::BGR2Grayscale(const cv::Mat& input)
 	{
 		if (input.channels() != 3) return input;
 
@@ -169,9 +169,9 @@ namespace ImageAnalysis
 		return grayscaleOutput;
 	}
 
-	cv::Mat ImageAnalyzerSingleThread::Canny(
-		const cv::Mat& input, 
-		const float& lowThresholdRatio, 
+	cv::Mat ImageAnalyzerMultiThreading::Canny(
+		const cv::Mat& input,
+		const float& lowThresholdRatio,
 		const float& highThresholdRatio
 	)
 	{
@@ -206,9 +206,9 @@ namespace ImageAnalysis
 		return cannyEdges;
 	}
 
-	std::vector<Circle> ImageAnalyzerSingleThread::CircleHoughTransform(
-		const cv::Mat& input, 
-		const int& lowRadiusThreshold, 
+	std::vector<Circle> ImageAnalyzerMultiThreading::CircleHoughTransform(
+		const cv::Mat& input,
+		const int& lowRadiusThreshold,
 		const int& highRadiusThreshold,
 		const int& minDistance,
 		const float& circularity

@@ -26,12 +26,6 @@ namespace ImageAnalysis
 			const double& sigma = 1.0
 		) = 0;
 
-		virtual cv::Mat LoGFilter(
-			const cv::Mat& input, 
-			const int& kernelSize, 
-			const double& sigma = 1.0
-		) = 0;
-
 		virtual cv::Mat OtsuThreshold(
 			const cv::Mat& input, 
 			const int& thresholdValue
@@ -48,7 +42,8 @@ namespace ImageAnalysis
 			const cv::Mat& input, 
 			const int& lowRadiusThreshold, 
 			const int& highRadiusThreshold,
-			const int& minDistance
+			const int& minDistance,
+			const float& circulairty
 		) = 0;
 	};
 } // namespace ImageAnalysis

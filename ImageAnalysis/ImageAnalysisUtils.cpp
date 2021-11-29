@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "ImageAnalysisUtils.h"
-#include <cmath>
 
 namespace ImageAnalysis
 {
@@ -101,6 +100,55 @@ namespace ImageAnalysis
 
             return convolutionResult;
         }
+        
+        cv::Mat ConvolveMT(const cv::Mat& input, const cv::Mat& kernel)
+        {
+            int halfKernelSize = (kernel.cols - 1) / 2;
+
+            cv::Mat convolutionResult;
+            input.convertTo(convolutionResult, input.type());
+
+            // Multithreading shit
+            auto threadsCount = std::thread::hardware_concurrency();
+            auto rowsPerThread = (input.rows - 2 * halfKernelSize) / (threadsCount - 1);
+            auto lastThreadRows = (input.rows - 2 * halfKernelSize) - rowsPerThread * (threadsCount - 1);
+
+            auto jobs = std::vector<std::future<bool>>(threadsCount);
+            for (int thread = 0; thread < threadsCount; thread++)
+            {
+                jobs[thread] = std::async(
+                    std::launch::async,
+                    [&](const int& t, cv::Mat& convolutionResult)
+                    {
+                        int rowsToProcess = (t != threadsCount - 1) ? rowsPerThread : lastThreadRows;
+                        for (int j = 0; j < rowsToProcess; j++)
+                        {
+                            for (int i = halfKernelSize; i < input.cols - halfKernelSize; i++)
+                            {
+                                ImageAnalysis::utils::SingleConvolve(
+                                    input,
+                                    convolutionResult,
+                                    kernel,
+                                    i,
+                                    j + t * rowsPerThread + halfKernelSize
+                                );
+                            }
+                        }
+
+                        return true;
+                    },
+                    thread,
+                    std::ref(convolutionResult)
+                );
+            }
+
+            for (int thread = 0; thread < threadsCount; thread++)
+            {
+                jobs[thread].get();
+            }
+
+            return convolutionResult;
+        }
 
         cv::Mat GaussianKernelGenerator(int size, double sigma)
         {
@@ -138,8 +186,8 @@ namespace ImageAnalysis
             cv::Mat KernelGx = (cv::Mat_<float>(3, 3) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
             cv::Mat KernelGy = (cv::Mat_<float>(3, 3) << 1, 2, 1, 0, 0, 0, -1, -2, -1);
 
-            cv::Mat Gx = ImageAnalysis::utils::Convolve(input32F, KernelGx);
-            cv::Mat Gy = ImageAnalysis::utils::Convolve(input32F, KernelGy);
+            cv::Mat Gx = Convolve(input32F, KernelGx);
+            cv::Mat Gy = Convolve(input32F, KernelGy);
 
             cv::Mat GxPow2, GyPow2;
             cv::pow(Gx, 2, GxPow2);
@@ -151,6 +199,73 @@ namespace ImageAnalysis
 
             // Gradient direction
             cv::Mat theta; 
+            cv::phase(Gx, Gy, theta);
+
+            // Change range from [0, 2PI] to [0, PI]
+            theta /= 2;
+
+            // Rounding direction to multiplications of 45 degree angles (namely 0, 45, 90 etc.)
+            // Also change values to range [0, 255]
+            for (int j = 0; j < theta.rows; j++)
+            {
+                for (int i = 0; i < theta.cols; i++)
+                {
+                    auto angle = theta.at<float>(j, i);
+                    if (angle >= CV_PI / 8 && angle < 3 * CV_PI / 8)
+                    {
+                        theta.at<float>(j, i) = 255 / 4;
+                    }
+                    else if (angle >= 3 * CV_PI / 8 && angle < 5 * CV_PI / 8)
+                    {
+                        theta.at<float>(j, i) = 255 / 2;
+                    }
+                    else if (angle >= 5 * CV_PI / 8 && angle < 7 * CV_PI / 8)
+                    {
+                        theta.at<float>(j, i) = 3 * 255 / 4;
+                    }
+                    else if (angle >= 7 * CV_PI / 8 || angle < CV_PI / 8)
+                    {
+                        theta.at<float>(j, i) = 255;
+                    }
+                }
+            }
+
+            // Scaling gradient to values [0-255]
+            double gMin, gMax;
+            cv::minMaxLoc(G, &gMin, &gMax);
+            G /= gMax;
+            G *= 255;
+
+            cv::Mat G8u;
+            G.convertTo(G8u, CV_8U);
+
+            cv::Mat theta8u;
+            theta.convertTo(theta8u, CV_8U);
+
+            return std::make_pair(G8u, theta8u);
+        }
+
+        std::pair<cv::Mat, cv::Mat> GradientMT(const cv::Mat& input)
+        {
+            cv::Mat input32F;
+            input.convertTo(input32F, CV_32F);
+
+            cv::Mat KernelGx = (cv::Mat_<float>(3, 3) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
+            cv::Mat KernelGy = (cv::Mat_<float>(3, 3) << 1, 2, 1, 0, 0, 0, -1, -2, -1);
+
+            cv::Mat Gx = ConvolveMT(input32F, KernelGx);
+            cv::Mat Gy = ConvolveMT(input32F, KernelGy);
+
+            cv::Mat GxPow2, GyPow2;
+            cv::pow(Gx, 2, GxPow2);
+            cv::pow(Gy, 2, GyPow2);
+
+            // Gradient intensity
+            cv::Mat G;
+            cv::sqrt(GxPow2 + GyPow2, G);
+
+            // Gradient direction
+            cv::Mat theta;
             cv::phase(Gx, Gy, theta);
 
             // Change range from [0, 2PI] to [0, PI]

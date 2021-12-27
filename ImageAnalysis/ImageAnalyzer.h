@@ -22,28 +22,28 @@ namespace ImageAnalysis
 	public:
 		virtual cv::Mat GaussianBlur(
 			const cv::Mat& input, 
-			const int& kernelSize, 
-			const double& sigma = 1.0
+			int kernelSize, 
+			double sigma = 1.0
 		) = 0;
 
 		virtual cv::Mat OtsuThreshold(
 			const cv::Mat& input, 
-			const int& thresholdValue
+			int thresholdValue
 		) = 0;
 		virtual cv::Mat BGR2Grayscale(const cv::Mat& input) = 0;
 
 		virtual cv::Mat Canny(
 			const cv::Mat& input, 
-			const float& lowThresholdRatio = 0.05, 
-			const float& highThresholdRatio = 0.09
+			float lowThresholdRatio = 0.05, 
+			float highThresholdRatio = 0.09
 		) = 0;
 
 		virtual std::vector<Circle> CircleHoughTransform(
 			const cv::Mat& input, 
-			const int& lowRadiusThreshold, 
-			const int& highRadiusThreshold,
-			const int& minDistance,
-			const float& circulairty
+			int lowRadiusThreshold, 
+			int highRadiusThreshold,
+			int minDistance,
+			float circulairty
 		) = 0;
 	};
 } // namespace ImageAnalysis

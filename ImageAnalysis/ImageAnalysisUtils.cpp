@@ -26,7 +26,7 @@ namespace ImageAnalysis
             return histogram;
         }
         
-        void SingleConvolve(const cv::Mat& input, cv::Mat& output, const cv::Mat& kernel, const int& i, const int& j)
+        void SingleConvolve(const cv::Mat& input, cv::Mat& output, const cv::Mat& kernel, int i, int j)
         {
             cv::Mat roi;
             int halfKernelSize = (kernel.cols - 1) / 2;

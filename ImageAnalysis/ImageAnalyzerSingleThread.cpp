@@ -5,8 +5,8 @@ namespace ImageAnalysis
 {
 	cv::Mat ImageAnalyzerSingleThread::GaussianBlur(
 		const cv::Mat& input, 
-		const int& kernelSize, 
-		const double& sigma
+		int kernelSize, 
+		double sigma
 	)
 	{
 		// Generate kernel
@@ -32,7 +32,7 @@ namespace ImageAnalysis
 
 	cv::Mat ImageAnalyzerSingleThread::OtsuThreshold(
 		const cv::Mat& input, 
-		const int& thresholdValue
+		int thresholdValue
 	)
 	{
 		int N = input.rows * input.cols;
@@ -171,8 +171,8 @@ namespace ImageAnalysis
 
 	cv::Mat ImageAnalyzerSingleThread::Canny(
 		const cv::Mat& input, 
-		const float& lowThresholdRatio, 
-		const float& highThresholdRatio
+		float lowThresholdRatio, 
+		float highThresholdRatio
 	)
 	{
 		cv::Mat imgGrayscale;
@@ -208,10 +208,10 @@ namespace ImageAnalysis
 
 	std::vector<Circle> ImageAnalyzerSingleThread::CircleHoughTransform(
 		const cv::Mat& input, 
-		const int& lowRadiusThreshold, 
-		const int& highRadiusThreshold,
-		const int& minDistance,
-		const float& circularity
+		int lowRadiusThreshold, 
+		int highRadiusThreshold,
+		int minDistance,
+		float circularity
 	)
 	{
 		auto circles = std::vector<Circle>();

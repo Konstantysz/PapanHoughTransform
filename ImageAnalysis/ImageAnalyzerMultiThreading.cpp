@@ -5,8 +5,8 @@ namespace ImageAnalysis
 {
 	cv::Mat ImageAnalyzerMultiThreading::GaussianBlur(
 		const cv::Mat& input,
-		const int& kernelSize,
-		const double& sigma
+		int kernelSize,
+		double sigma
 	)
 	{
 		// Generate kernel
@@ -32,7 +32,7 @@ namespace ImageAnalysis
 
 	cv::Mat ImageAnalyzerMultiThreading::OtsuThreshold(
 		const cv::Mat& input,
-		const int& thresholdValue
+		int thresholdValue
 	)
 	{
 		int N = input.rows * input.cols;
@@ -171,8 +171,8 @@ namespace ImageAnalysis
 
 	cv::Mat ImageAnalyzerMultiThreading::Canny(
 		const cv::Mat& input,
-		const float& lowThresholdRatio,
-		const float& highThresholdRatio
+		float lowThresholdRatio,
+		float highThresholdRatio
 	)
 	{
 		cv::Mat imgGrayscale;
@@ -190,7 +190,7 @@ namespace ImageAnalysis
 		auto imgBlurred = GaussianBlur(imgGrayscale, 5);
 
 		// 2. Gradients
-		auto gradientsInfo = ImageAnalysis::utils::Gradient(imgBlurred);
+		auto gradientsInfo = ImageAnalysis::utils::GradientMT(imgBlurred);
 		auto gradIntensity = gradientsInfo.first;
 		auto gradOrientation = gradientsInfo.second;
 
@@ -208,57 +208,75 @@ namespace ImageAnalysis
 
 	std::vector<Circle> ImageAnalyzerMultiThreading::CircleHoughTransform(
 		const cv::Mat& input,
-		const int& lowRadiusThreshold,
-		const int& highRadiusThreshold,
-		const int& minDistance,
-		const float& circularity
+		int lowRadiusThreshold,
+		int highRadiusThreshold,
+		int minDistance,
+		float circularity
 	)
 	{
-		auto circles = std::vector<Circle>();
-
-		auto accumulator = std::vector<cv::Mat>(highRadiusThreshold - lowRadiusThreshold + 1);
-		for (auto& layer : accumulator)
+		const int jobsNumber = highRadiusThreshold - lowRadiusThreshold + 1;
+		auto jobs = std::vector<std::future<std::vector<Circle>>>(jobsNumber);
+		for (int k = 0; k < jobsNumber; k++)
 		{
-			layer = cv::Mat::zeros(input.size(), CV_32S);
-		}
-
-		//!< Voting
-		for (size_t r = lowRadiusThreshold; r <= highRadiusThreshold; r++)
-		{
-			for (int t = 0; t < 360; t++)
-			{
-				for (int i = 0; i < input.cols; i++)
+			jobs[k] = std::async(
+				std::launch::async,
+				[&](int k)
 				{
-					for (int j = 0; j < input.rows; j++)
+					cv::Mat accumulatorLayer = cv::Mat::zeros(input.size(), CV_32S);
+					const int r = lowRadiusThreshold + k;
+
+					//!< Voting
+					for (int t = 0; t < 360; t++)
 					{
-						if (input.at<uchar>(j, i) == 255)
+						for (int i = 0; i < input.cols; i++)
 						{
-							int b = j - r * sin(t * CV_PI / 180);
-							int a = i - r * cos(t * CV_PI / 180);
-							if (a > 0 && a < input.cols && b > 0 && b < input.rows)
+							for (int j = 0; j < input.rows; j++)
 							{
-								accumulator[r - static_cast<size_t>(lowRadiusThreshold)].at<int>(b, a)++;
+								if (input.at<uchar>(j, i) == 255)
+								{
+									int b = j - r * sin(t * CV_PI / 180);
+									int a = i - r * cos(t * CV_PI / 180);
+									if (a > 0 && a < input.cols && b > 0 && b < input.rows)
+									{
+										accumulatorLayer.at<int>(b, a)++;
+									}
+								}
 							}
 						}
 					}
-				}
-			}
+
+					//!< Extracting circles data
+					auto circlesSingleRadius = std::vector<Circle>();
+					const int minimalVotes = 2 * CV_PI * r * circularity;
+					for (int i = 0; i < accumulatorLayer.cols; i++)
+					{
+						for (int j = 0; j < accumulatorLayer.rows; j++)
+						{
+							if (accumulatorLayer.at<int>(j, i) > minimalVotes)
+							{
+								circlesSingleRadius.push_back(Circle(i, j, r, accumulatorLayer.at<int>(j, i)));
+							}
+						}
+					}
+
+					return circlesSingleRadius;
+				},
+				k
+			);
 		}
 
-		//!< Extracting circles data
-		for (size_t r = lowRadiusThreshold; r <= highRadiusThreshold; r++)
+		auto circlesForEveryRadius = std::vector<std::vector<Circle>>(jobsNumber);
+		for (auto& job : jobs)
 		{
-			size_t id = r - static_cast<size_t>(lowRadiusThreshold);
-			int minimalVotes = 2 * CV_PI * r * circularity;
-			for (int i = 0; i < accumulator[id].cols; i++)
+			circlesForEveryRadius.push_back(job.get());
+		}
+
+		auto circles = std::vector<Circle>();
+		for (auto& singleRadiusCircles : circlesForEveryRadius)
+		{
+			for (auto& circle : singleRadiusCircles)
 			{
-				for (int j = 0; j < accumulator[id].rows; j++)
-				{
-					if (accumulator[id].at<int>(j, i) > minimalVotes)
-					{
-						circles.push_back(Circle(i, j, r, accumulator[id].at<int>(j, i)));
-					}
-				}
+				circles.push_back(circle);
 			}
 		}
 
@@ -294,5 +312,4 @@ namespace ImageAnalysis
 
 		return resultCircles;
 	}
-
 }

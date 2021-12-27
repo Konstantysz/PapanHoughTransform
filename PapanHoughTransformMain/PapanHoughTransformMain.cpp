@@ -13,7 +13,7 @@ int main()
     auto img = cv::imread(".//..//Resources//testImage.jpg");
 
     //!< Single thread functions
-    ImageAnalysis::ImageAnalyzer* imageAnalyzer =new ImageAnalysis::ImageAnalyzerSingleThread();
+    ImageAnalysis::ImageAnalyzer* imageAnalyzer = new ImageAnalysis::ImageAnalyzerSingleThread();
     {
         cv::Mat imgGray;
         {
@@ -94,7 +94,7 @@ int main()
             [[maybe_unused]] ImageAnalysis::utils::Timer t("Multithreading --- Hough circle transform");
             circles = imageAnalyzer->CircleHoughTransform(imgEdges, 25, 35, 20, 0.75);
         }
-#ifndef NDEBUG
+
         //!< Draw and display circles
         cv::Mat resultIa;
         img.copyTo(resultIa);
@@ -109,7 +109,6 @@ int main()
         cv::resizeWindow("circle image", cv::Size(resultIa.cols / 2, resultIa.rows / 2));
         cv::imshow("circle image", resultIa);
         cv::waitKey(0);
-#endif // !NDEBUG
     }
 
     //!< OpenCV for comparison and benchmark
@@ -121,7 +120,7 @@ int main()
             cv::cvtColor(img, imgGray, cv::COLOR_BGR2GRAY);
             cv::HoughCircles(imgGray, circlesOpencCV, cv::HOUGH_GRADIENT_ALT, 1, 20, 100.0, 0.75, 25, 35);
         }
-#ifndef NDEBUG
+
         cv::Mat resultOpenCV;
         img.copyTo(resultOpenCV);
 
@@ -133,7 +132,6 @@ int main()
         cv::resizeWindow("circle image opencv", cv::Size(resultOpenCV.cols / 2, resultOpenCV.rows / 2));
         cv::imshow("circle image opencv", resultOpenCV);
         cv::waitKey(0);
-#endif // !NDEBUG
     }
 
     return 0;

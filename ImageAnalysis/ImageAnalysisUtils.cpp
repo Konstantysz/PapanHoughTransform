@@ -381,5 +381,5 @@ namespace ImageAnalysis
 
             return zeroPadOutput(cv::Rect(1, 1, input.cols, input.rows));
         }
-    } // namespace utils
-} // namespace ImageAnalysis
+    } //!< namespace utils
+} //!< namespace ImageAnalysis

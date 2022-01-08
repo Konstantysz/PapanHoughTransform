@@ -31,8 +31,7 @@ namespace ImageAnalysis
 	}
 
 	cv::Mat ImageAnalyzerMultiThreading::OtsuThreshold(
-		const cv::Mat& input,
-		int thresholdValue
+		const cv::Mat& input
 	)
 	{
 		int N = input.rows * input.cols;

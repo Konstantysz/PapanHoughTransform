@@ -30,7 +30,7 @@ int main()
         cv::Mat imgBin;
         {
             [[maybe_unused]] ImageAnalysis::utils::Timer t("Single thread --- Otsu thresholding");
-            imgBin = imageAnalyzer->OtsuThreshold(imgBlur, 27);
+            imgBin = imageAnalyzer->OtsuThreshold(imgBlur);
         }
 
         cv::Mat imgEdges;
@@ -62,7 +62,7 @@ int main()
 #endif // !NDEBUG
     }
 
-    //!< Single thread functions
+    //!< Multithreading functions
     imageAnalyzer = new ImageAnalysis::ImageAnalyzerMultiThreading();
     {
         cv::Mat imgGray;
@@ -80,7 +80,7 @@ int main()
         cv::Mat imgBin;
         {
             [[maybe_unused]] ImageAnalysis::utils::Timer t("Multithreading --- Otsu thresholding");
-            imgBin = imageAnalyzer->OtsuThreshold(imgBlur, 27);
+            imgBin = imageAnalyzer->OtsuThreshold(imgBlur);
         }
 
         cv::Mat imgEdges;
@@ -109,6 +109,8 @@ int main()
         cv::resizeWindow("circle image", cv::Size(resultIa.cols / 2, resultIa.rows / 2));
         cv::imshow("circle image", resultIa);
         cv::waitKey(0);
+
+        cv::imwrite(".//..//Resources//testImage_result.jpg", resultIa);
     }
 
     //!< OpenCV for comparison and benchmark

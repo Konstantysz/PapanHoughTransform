@@ -27,8 +27,7 @@ namespace ImageAnalysis
 		) = 0;
 
 		virtual cv::Mat OtsuThreshold(
-			const cv::Mat& input, 
-			int thresholdValue
+			const cv::Mat& input
 		) = 0;
 		virtual cv::Mat BGR2Grayscale(const cv::Mat& input) = 0;
 

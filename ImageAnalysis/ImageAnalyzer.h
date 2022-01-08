@@ -45,4 +45,4 @@ namespace ImageAnalysis
 			float circulairty
 		) = 0;
 	};
-} // namespace ImageAnalysis
+} //!< namespace ImageAnalysis

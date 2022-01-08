@@ -59,7 +59,7 @@ int main()
         cv::resizeWindow("circle image", cv::Size(resultIa.cols / 2, resultIa.rows / 2));
         cv::imshow("circle image", resultIa);
         cv::waitKey(0);
-#endif // !NDEBUG
+#endif //!< !NDEBUG
     }
 
     //!< Multithreading functions

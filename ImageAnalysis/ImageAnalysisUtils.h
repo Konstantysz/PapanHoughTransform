@@ -34,8 +34,6 @@ namespace ImageAnalysis
 		std::array<int, 256> Histogram(const cv::Mat& input);
 
 		void SingleConvolve(const cv::Mat& input, cv::Mat& output, const cv::Mat& kernel, int i, int j);
-		
-		cv::Mat ConvolveZeroPad(const cv::Mat& input, const cv::Mat& kernel);
 
 		cv::Mat Convolve(const cv::Mat& input, const cv::Mat& kernel);
 

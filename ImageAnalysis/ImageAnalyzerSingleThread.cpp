@@ -9,11 +9,12 @@ namespace ImageAnalysis
 		double sigma
 	)
 	{
-		// Generate kernel
+		//!< Generate kernel
 		cv::Mat kernel = ImageAnalysis::utils::GaussianKernelGenerator(kernelSize, sigma);
 		int halfKernelSize = (kernelSize - 1) / 2;
 
-		// Split image to channels to itarate over pixels image channel independently
+		//!< Split image to channels to itarate over pixels image channel independently, 
+		//!< if grayscale iamge vector size is 1
 		auto channelVector = std::vector<cv::Mat>();
 		cv::split(input, channelVector);
 		auto convolutionResultVector = channelVector;
@@ -26,7 +27,6 @@ namespace ImageAnalysis
 		cv::Mat output = cv::Mat(cv::Size(input.cols, input.rows), input.type());
 		cv::merge(convolutionResultVector, output);
 
-		// Delete zero-pad and return
 		return output;
 	}
 
@@ -84,7 +84,8 @@ namespace ImageAnalysis
 	{
 		if (input.channels() != 3) return input;
 
-		// http://ninghang.blogspot.com/2012/11/list-of-mat-type-in-opencv.html
+		//!< Function supports converting to grayscale all types of cv::Mat listed below:
+		//!< http://ninghang.blogspot.com/2012/11/list-of-mat-type-in-opencv.html
 		int enum3ChannelToSingleDiff = 16;
 		cv::Mat grayscaleOutput = cv::Mat::zeros(cv::Size(input.cols, input.rows), input.type() - enum3ChannelToSingleDiff);
 
@@ -185,21 +186,21 @@ namespace ImageAnalysis
 			imgGrayscale = input;
 		}
 
-		// 1. Noise reduction
+		//!< 1. Noise reduction
 		auto imgBlurred = GaussianBlur(imgGrayscale, 5);
 
-		// 2. Gradients
+		//!< 2. Gradients
 		auto gradientsInfo = ImageAnalysis::utils::Gradient(imgBlurred);
 		auto gradIntensity = gradientsInfo.first;
 		auto gradOrientation = gradientsInfo.second;
 
-		// 3. Non-Maximum Suppression
+		//!< 3. Non-Maximum Suppression
 		auto nonMaxSuppressed = ImageAnalysis::utils::NonMaxSuppression(gradientsInfo.first, gradientsInfo.second);
 
-		// 4. Double threshold
+		//!< 4. Double threshold
 		auto thresholdedEdges = ImageAnalysis::utils::DoubleThreshold(nonMaxSuppressed, lowThresholdRatio, highThresholdRatio);
 
-		// 5. Hysteresis Thresholding
+		//!< 5. Hysteresis Thresholding
 		auto cannyEdges = ImageAnalysis::utils::HysteresisThresholding(thresholdedEdges);
 
 		return cannyEdges;

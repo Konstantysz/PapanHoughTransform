@@ -9,7 +9,6 @@ namespace ImageAnalysis
         {
             if (input.type() != CV_8UC1)
             {
-                // TODO: Conversion to proper type
                 return std::array<int, 256>();
             }
 
@@ -33,7 +32,8 @@ namespace ImageAnalysis
             input(cv::Rect(i - halfKernelSize, j - halfKernelSize, kernel.cols, kernel.rows)).convertTo(roi, CV_32F);
             auto newValue = roi.dot(kernel);
 
-            switch (input.type()) {
+            switch (input.type()) 
+            {
             case CV_8U:
                 output.at<uchar>(j, i) = uchar(newValue);
                 break;
@@ -56,33 +56,10 @@ namespace ImageAnalysis
                 output.at<double>(j, i) = double(newValue);
                 break;
             default:
-                throw "KUUUUURWA";
+                throw "Type not valid!";
             }
-
-
-    }
-        
-        cv::Mat ConvolveZeroPad(const cv::Mat& input, const cv::Mat& kernel)
-        {
-            int halfKernelSize = (kernel.cols - 1) / 2;
-
-            // Zero-pad matrix
-            cv::Mat zeroPadImage = cv::Mat::zeros(cv::Size(input.cols + 2 * halfKernelSize, input.rows + 2 * halfKernelSize), input.type());
-            input.copyTo(zeroPadImage(cv::Rect(halfKernelSize, halfKernelSize, input.cols, input.rows)));
-
-            cv::Mat convolutionResult = cv::Mat::zeros(cv::Size(zeroPadImage.cols, zeroPadImage.rows), input.type());
-
-            for (int i = halfKernelSize; i < zeroPadImage.cols - halfKernelSize; i++)
-            {
-                for (int j = halfKernelSize; j < zeroPadImage.rows - halfKernelSize; j++)
-                {
-                    ImageAnalysis::utils::SingleConvolve(zeroPadImage, convolutionResult, kernel, i, j);
-                }
-            }
-
-            return convolutionResult(cv::Rect(halfKernelSize, halfKernelSize, input.cols, input.rows));
         }
-
+        
         cv::Mat Convolve(const cv::Mat& input, const cv::Mat& kernel)
         {
             int halfKernelSize = (kernel.cols - 1) / 2;
@@ -108,7 +85,6 @@ namespace ImageAnalysis
             cv::Mat convolutionResult;
             input.convertTo(convolutionResult, input.type());
 
-            // Multithreading shit
             auto threadsCount = std::thread::hardware_concurrency();
             auto rowsPerThread = (input.rows - 2 * halfKernelSize) / (threadsCount - 1);
             auto lastThreadRows = (input.rows - 2 * halfKernelSize) - rowsPerThread * (threadsCount - 1);
@@ -154,13 +130,10 @@ namespace ImageAnalysis
         {
             if (size % 2 == 0)
             {
-                throw "Kurwa daj nieparzyst¹";
+                throw "Kernel size has to be odd number!";
             }
 
-            // initialising standard deviation to 1.0
             double s = 2.0 * sigma * sigma;
-
-            // sum is for normalization
             double sum = 0.0;
 
             int halfKernelSize = (size - 1) / 2;
@@ -174,7 +147,6 @@ namespace ImageAnalysis
                 }
             }
 
-            // normalising the Kernel
             return kernel /= sum;
         }
 
@@ -186,6 +158,7 @@ namespace ImageAnalysis
             cv::Mat KernelGx = (cv::Mat_<float>(3, 3) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
             cv::Mat KernelGy = (cv::Mat_<float>(3, 3) << 1, 2, 1, 0, 0, 0, -1, -2, -1);
 
+            // Gradients in eah of the axes
             cv::Mat Gx = Convolve(input32F, KernelGx);
             cv::Mat Gy = Convolve(input32F, KernelGy);
 

@@ -33,4 +33,4 @@ namespace ImageAnalysis
 			float circulatity
 		);
 	};
-} // namespace ImageAnalysis
+} //!< namespace ImageAnalysis
